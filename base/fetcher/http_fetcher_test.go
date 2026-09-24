@@ -131,12 +131,16 @@ func TestHttpFetcher_ContextCancellation(t *testing.T) {
 
 	f := NewHTTPFetcher(5 * time.Second)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	ctx, cancel := context.WithCancel(context.Background())
 
 	cancel()
 
 	_, err := f.Fetch(ctx, server.URL)
 	if err == nil {
 		t.Fatalf("expected error due to context cancellation, got nil")
+	}
+
+	if !strings.Contains(err.Error(), "failed to fetch URL") && !strings.Contains(err.Error(), "context canceled") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
