@@ -24,7 +24,17 @@ func NewWorker(fetcher fetcher.Fetcher, parser parser.Parser, logger *slog.Logge
 }
 
 func (w *Worker) process(ctx context.Context, task models.Task) models.Result {
-	data, err := w.Fetcher.Fetch(ctx, task.URL)
+	resp, err := w.Fetcher.Fetch(ctx, task.URL)
+
+	if w.Logger != nil && resp.StatusCode != 0 {
+		w.Logger.Info(
+			"http request",
+			"url", task.URL,
+			"status_code", resp.StatusCode,
+			"status", resp.Status,
+		)
+	}
+
 	if err != nil {
 		if w.Logger != nil {
 			w.Logger.Error(
@@ -40,7 +50,7 @@ func (w *Worker) process(ctx context.Context, task models.Task) models.Result {
 		}
 	}
 
-	page, err := w.Parser.Parse(data)
+	page, err := w.Parser.Parse(resp.Body)
 	if err != nil {
 		if w.Logger != nil {
 			w.Logger.Error(

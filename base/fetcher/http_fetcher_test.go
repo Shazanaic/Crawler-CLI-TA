@@ -20,15 +20,15 @@ func TestHttpFetcher_Success(t *testing.T) {
 
 	f := NewHTTPFetcher(5 * time.Second)
 
-	body, err := f.Fetch(context.Background(), server.URL)
+	response, err := f.Fetch(context.Background(), server.URL)
 
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
 
 	expected := "<html><body>Hello</body></html>"
-	if strings.TrimSpace(string(body)) != expected {
-		t.Fatalf("expected body %q, got %q", expected, string(body))
+	if strings.TrimSpace(string(response.Body)) != expected {
+		t.Fatalf("expected body %q, got %q", expected, string(response.Body))
 	}
 }
 

@@ -26,41 +26,65 @@ func NewHTTPFetcher(request_timeout time.Duration) *HTTPFetcher {
 	}
 }
 
-func (hf *HTTPFetcher) Fetch(ctx context.Context, url string) ([]byte, error) {
+func (hf *HTTPFetcher) Fetch(ctx context.Context, url string) (Response, error) {
 	rctx, cancel := context.WithTimeout(ctx, hf.request_timeout)
 	defer cancel()
 
 	req, err := http.NewRequestWithContext(rctx, http.MethodGet, url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
+		return Response{}, fmt.Errorf("failed to create request: %w", err)
 	}
 
 	resp, err := hf.Client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch URL: %w", err)
+		return Response{}, fmt.Errorf("failed to fetch URL: %w", err)
 	}
 
+	statusCode := resp.StatusCode
+	status := resp.Status
+
 	if resp.StatusCode >= 300 && resp.StatusCode < 400 {
-		return nil, fmt.Errorf("redirection %s", resp.Status)
+		resp.Body.Close()
+
+		return Response{
+			StatusCode: statusCode,
+			Status:     status,
+		}, fmt.Errorf("redirection %s", resp.Status)
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		resp.Body.Close()
+
+		return Response{
+			StatusCode: statusCode,
+			Status:     status,
+		}, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	resp.Body, err = CheckHTML(resp)
 
 	if err != nil {
-		return nil, fmt.Errorf("unsupported content type: %w", err)
+		return Response{
+			StatusCode: statusCode,
+			Status:     status,
+		}, fmt.Errorf("unsupported content type: %w", err)
 	}
 
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
+		return Response{
+			StatusCode: statusCode,
+			Status:     status,
+		}, fmt.Errorf("failed to read response body: %w", err)
 	}
-	return body, nil
+
+	return Response{
+		Body:       body,
+		StatusCode: statusCode,
+		Status:     status,
+	}, nil
 }
 
 // проверка на html, учитывая возможность отсутствия хедеров типа контента
