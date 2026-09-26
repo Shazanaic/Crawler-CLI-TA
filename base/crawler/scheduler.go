@@ -2,6 +2,7 @@ package crawler
 
 import (
 	"context"
+	"errors"
 	"net/url"
 	"sync"
 
@@ -65,6 +66,7 @@ func (sch *Scheduler) Run(ctx context.Context, startURLs []string, maxDepth int,
 
 	active := 0
 
+schLoop:
 	for len(pending) > 0 || active > 0 {
 		if ctx.Err() != nil {
 			break
@@ -72,6 +74,7 @@ func (sch *Scheduler) Run(ctx context.Context, startURLs []string, maxDepth int,
 
 		if len(pending) > 0 && active < sch.workers {
 			task := pending[0]
+			pending[0] = models.Task{}
 			pending = pending[1:]
 
 			select {
@@ -79,7 +82,7 @@ func (sch *Scheduler) Run(ctx context.Context, startURLs []string, maxDepth int,
 				active++
 
 			case <-ctx.Done():
-				break
+				break schLoop
 			}
 
 			continue
@@ -91,7 +94,7 @@ func (sch *Scheduler) Run(ctx context.Context, startURLs []string, maxDepth int,
 			sch.handleResult(result, maxDepth, visited, &pending, &roots)
 
 		case <-ctx.Done():
-			break
+			break schLoop
 		}
 	}
 
@@ -138,6 +141,8 @@ func (sch *Scheduler) handleResult(result models.Result, maxDepth int, visited m
 func (sch *Scheduler) getAllowedLinks(currentURL, rootURL string, links []string) []string {
 	allowedLinks := make([]string, 0)
 
+	seen := make(map[string]struct{}) // чтоб не спамить одинаковыми ссылками в слайсыч из-за ResolveReference,
+
 	baseURL, err := url.Parse(currentURL)
 	if err != nil {
 		return allowedLinks
@@ -160,8 +165,45 @@ func (sch *Scheduler) getAllowedLinks(currentURL, rootURL string, links []string
 			continue
 		}
 
-		allowedLinks = append(allowedLinks, resolvedURL.String())
+		resolvedURLStr := resolvedURL.String()
+
+		if _, exists := seen[resolvedURLStr]; exists {
+			continue
+		}
+
+		seen[resolvedURLStr] = struct{}{}
+		allowedLinks = append(allowedLinks, resolvedURLStr)
 	}
 
 	return allowedLinks
+}
+
+func getDomain(urlRaw string) (string, error) {
+	parsedURL, err := url.Parse(urlRaw)
+
+	if err != nil {
+		return "", err
+	}
+
+	if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
+		return "", errors.New("unsupported scheme")
+	}
+
+	if parsedURL.Hostname() == "" {
+		return "", errors.New("no hostname")
+	}
+
+	return parsedURL.Hostname(), nil
+}
+
+func convertRootsToPages(roots []*models.Page) []models.Page {
+	result := make([]models.Page, 0, len(roots))
+
+	for _, root := range roots {
+		if root != nil {
+			result = append(result, *root)
+		}
+	}
+
+	return result
 }
