@@ -22,11 +22,11 @@ func TestJSONWriter_Write(t *testing.T) {
 		{
 			Resource: "https://example.com",
 			Title:    "Example",
-			Links: []models.Page{
+			Links: []*models.Page{
 				{
 					Resource: "https://example.com/about",
 					Title:    "About",
-					Links:    []models.Page{},
+					Links:    []*models.Page{},
 				},
 			},
 		},

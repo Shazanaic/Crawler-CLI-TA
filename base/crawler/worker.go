@@ -26,6 +26,14 @@ func NewWorker(fetcher fetcher.Fetcher, parser parser.Parser, logger *slog.Logge
 func (w *Worker) process(ctx context.Context, task models.Task) models.Result {
 	data, err := w.Fetcher.Fetch(ctx, task.URL)
 	if err != nil {
+		if w.Logger != nil {
+			w.Logger.Error(
+				"failed to fetch page",
+				"url", task.URL,
+				"error", err,
+			)
+		}
+
 		return models.Result{
 			Task:  task,
 			Error: err,
@@ -34,6 +42,14 @@ func (w *Worker) process(ctx context.Context, task models.Task) models.Result {
 
 	page, err := w.Parser.Parse(data)
 	if err != nil {
+		if w.Logger != nil {
+			w.Logger.Error(
+				"failed to parse page",
+				"url", task.URL,
+				"error", err,
+			)
+		}
+
 		return models.Result{
 			Task:  task,
 			Error: err,
@@ -45,7 +61,7 @@ func (w *Worker) process(ctx context.Context, task models.Task) models.Result {
 		Page: &models.Page{
 			Resource: task.URL,
 			Title:    page.Title,
-			Links:    make([]models.Page, 0),
+			Links:    make([]*models.Page, 0),
 		},
 		Links: page.URLs,
 	}

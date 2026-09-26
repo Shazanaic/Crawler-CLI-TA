@@ -116,7 +116,7 @@ func (sch *Scheduler) handleResult(result models.Result, maxDepth int, visited m
 	if result.Task.Parent == nil {
 		*roots = append(*roots, page)
 	} else {
-		result.Task.Parent.Links = append(result.Task.Parent.Links, *page)
+		result.Task.Parent.Links = append(result.Task.Parent.Links, page)
 	}
 
 	if result.Task.Depth >= maxDepth {
