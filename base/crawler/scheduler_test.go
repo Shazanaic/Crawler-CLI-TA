@@ -14,6 +14,103 @@ import (
 	"Crawler-CLI-TA/base/parser"
 )
 
+type testFetcher struct{}
+
+func (f *testFetcher) Fetch(ctx context.Context, url string) (fetcher.Response, error) {
+	return fetcher.Response{
+		Body:       []byte(url),
+		StatusCode: 200,
+		Status:     "ok",
+	}, nil
+}
+
+type testParser struct{}
+
+func (p *testParser) Parse(html []byte) (parser.ParseResult, error) {
+	url := string(html)
+
+	switch url {
+	case "http://example.com/":
+		return parser.ParseResult{
+			Title: "Home",
+			URLs:  []string{"/about"},
+		}, nil
+
+	case "http://example.com/about":
+		return parser.ParseResult{
+			Title: "About",
+			URLs:  []string{"/team"},
+		}, nil
+
+	case "http://example.com/team":
+		return parser.ParseResult{
+			Title: "Team",
+			URLs:  []string{},
+		}, nil
+	}
+
+	return parser.ParseResult{}, nil
+}
+
+func TestScheduler_BuildsTree(t *testing.T) {
+	worker := NewWorker(
+		&testFetcher{},
+		&testParser{},
+		nil,
+	)
+
+	scheduler := NewScheduler(1)
+
+	pages := scheduler.Run(
+		context.Background(),
+		[]string{"http://example.com/"},
+		2,
+		worker,
+	)
+
+	if len(pages) != 1 {
+		t.Fatalf("expected 1 root page, got %d", len(pages))
+	}
+
+	root := pages[0]
+
+	if root.Resource != "http://example.com/" {
+		t.Fatalf("unexpected root resource: %s", root.Resource)
+	}
+
+	if len(root.Links) != 1 {
+		t.Fatalf(
+			"expected root to have 1 child, got %d",
+			len(root.Links),
+		)
+	}
+
+	about := root.Links[0]
+
+	if about.Resource != "http://example.com/about" {
+		t.Fatalf(
+			"expected about page, got %s",
+			about.Resource,
+		)
+	}
+
+	if len(about.Links) != 1 {
+		t.Fatalf(
+			"expected about to have 1 child, got %d",
+			len(about.Links),
+		)
+	}
+
+	team := about.Links[0]
+
+	if team.Resource != "http://example.com/team" {
+		t.Fatalf(
+			"expected team page, got %s",
+			team.Resource,
+		)
+	}
+}
+
 func TestScheduler_Crawl(t *testing.T) {
 	var requests int32
 
