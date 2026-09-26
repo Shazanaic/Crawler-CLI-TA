@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"sync"
 
-	"ints-test-assign/base/models"
+	"Crawler-CLI-TA/base/models"
 )
 
 const maxWorkers = 10

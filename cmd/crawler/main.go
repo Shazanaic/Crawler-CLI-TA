@@ -1,9 +1,11 @@
 package main
 
 import (
+	"Crawler-CLI-TA/base/config"
+	"context"
 	"fmt"
-	"ints-test-assign/base/config"
 	"os"
+	"os/signal"
 )
 
 func main() {
@@ -15,4 +17,9 @@ func main() {
 
 	fmt.Println("Config:", cfg)
 
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
+	ctx, cancel := context.WithTimeout(ctx, cfg.Timeout)
+	defer cancel()
 }

@@ -5,9 +5,9 @@ import (
 	"log/slog"
 	"time"
 
-	"ints-test-assign/base/fetcher"
-	"ints-test-assign/base/models"
-	"ints-test-assign/base/parser"
+	"Crawler-CLI-TA/base/fetcher"
+	"Crawler-CLI-TA/base/models"
+	"Crawler-CLI-TA/base/parser"
 )
 
 type Crawler struct {

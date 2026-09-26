@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"ints-test-assign/base/fetcher"
-	"ints-test-assign/base/parser"
+	"Crawler-CLI-TA/base/fetcher"
+	"Crawler-CLI-TA/base/parser"
 )
 
 func TestScheduler_Crawl(t *testing.T) {
