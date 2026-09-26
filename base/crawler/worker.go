@@ -47,6 +47,7 @@ func (w *Worker) process(ctx context.Context, task models.Task) models.Result {
 			Title:    page.Title,
 			Links:    make([]models.Page, 0),
 		},
+		Links: page.URLs,
 	}
 }
 
