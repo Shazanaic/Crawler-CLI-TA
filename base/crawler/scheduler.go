@@ -92,6 +92,7 @@ schLoop:
 
 	close(tasks)
 	wg.Wait()
+	close(results)
 	return convertRootsToPages(roots)
 }
 
