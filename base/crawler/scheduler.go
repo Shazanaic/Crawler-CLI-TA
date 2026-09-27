@@ -9,19 +9,11 @@ import (
 	"Crawler-CLI-TA/base/models"
 )
 
-const maxWorkers = 10
-
 type Scheduler struct {
 	workers int
 }
 
 func NewScheduler(workers int) *Scheduler {
-	if workers <= 0 {
-		workers = 1
-	}
-	if workers > maxWorkers {
-		workers = maxWorkers
-	}
 	return &Scheduler{
 		workers: workers,
 	}
