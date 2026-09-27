@@ -3,7 +3,6 @@ package crawler
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"sync/atomic"
@@ -52,21 +51,12 @@ func (p *testParser) Parse(html []byte) (parser.ParseResult, error) {
 	return parser.ParseResult{}, nil
 }
 
-func TestScheduler_BuildsTree(t *testing.T) {
-	worker := NewWorker(
-		&testFetcher{},
-		&testParser{},
-		nil,
-	)
+func TestScheduler_BuildsPageTree(t *testing.T) {
+	worker := NewWorker(&testFetcher{}, &testParser{}, nil)
 
 	scheduler := NewScheduler(1)
 
-	pages := scheduler.Run(
-		context.Background(),
-		[]string{"http://example.com/"},
-		2,
-		worker,
-	)
+	pages := scheduler.Run(context.Background(), []string{"http://example.com/"}, 2, worker)
 
 	if len(pages) != 1 {
 		t.Fatalf("expected 1 root page, got %d", len(pages))
@@ -104,10 +94,7 @@ func TestScheduler_BuildsTree(t *testing.T) {
 	team := about.Links[0]
 
 	if team.Resource != "http://example.com/team" {
-		t.Fatalf(
-			"expected team page, got %s",
-			team.Resource,
-		)
+		t.Fatalf("expected team page, got %s", team.Resource)
 	}
 }
 
@@ -172,8 +159,7 @@ func TestScheduler_Crawl(t *testing.T) {
 
 	httpFetcher := fetcher.NewHTTPFetcher(5 * time.Second)
 	htmlParser := parser.NewHTMLParser()
-	logger := slog.Default()
-	worker := NewWorker(httpFetcher, htmlParser, logger)
+	worker := NewWorker(httpFetcher, htmlParser, nil)
 	scheduler := NewScheduler(3)
 
 	startURL := server.URL + "/" //иначе путает и считает ссылку на старт новой ссылкой
@@ -237,10 +223,10 @@ func TestScheduler_MaxDepth(t *testing.T) {
 	startURL := server.URL + "/"
 
 	ctx := context.Background()
-	logger := slog.Default()
+
 	httpFetcher := fetcher.NewHTTPFetcher(5 * time.Second)
 	htmlParser := parser.NewHTMLParser()
-	worker := NewWorker(httpFetcher, htmlParser, logger)
+	worker := NewWorker(httpFetcher, htmlParser, nil)
 	scheduler := NewScheduler(2)
 
 	result := scheduler.Run(ctx, []string{startURL}, 1, worker)
@@ -296,11 +282,10 @@ func TestScheduler_NoCycles(t *testing.T) {
 	startURL := server.URL + "/"
 
 	ctx := context.Background()
-	logger := slog.Default()
 
 	httpFetcher := fetcher.NewHTTPFetcher(5 * time.Second)
 	htmlParser := parser.NewHTMLParser()
-	worker := NewWorker(httpFetcher, htmlParser, logger)
+	worker := NewWorker(httpFetcher, htmlParser, nil)
 	scheduler := NewScheduler(3)
 
 	result := scheduler.Run(ctx, []string{startURL}, 10, worker)
@@ -346,12 +331,12 @@ func TestScheduler_MaxWorkers(t *testing.T) {
 	for i := 0; i < 20; i++ {
 		startURLs = append(startURLs, fmt.Sprintf("%s/page%d", server.URL, i))
 	}
+
 	ctx := context.Background()
-	logger := slog.Default()
 
 	httpFetcher := fetcher.NewHTTPFetcher(5 * time.Second)
 	htmlParser := parser.NewHTMLParser()
-	worker := NewWorker(httpFetcher, htmlParser, logger)
+	worker := NewWorker(httpFetcher, htmlParser, nil)
 	scheduler := NewScheduler(10)
 
 	scheduler.Run(ctx, startURLs, 0, worker)
