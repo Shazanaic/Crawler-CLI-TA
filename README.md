@@ -104,7 +104,7 @@ go run ./cmd/crawler \
 | `--workers` | Количество одновременно работающих workers | `10` |
 | `--timeout` | Общий timeout выполнения | `10s` |
 | `--request-timeout` | Timeout отдельного HTTP-запроса | `5s` |
-| `--output` | Путь к JSON-файлу с результатом | `output.txt` |
+| `--output` | Путь к JSON-файлу с результатом | `output.json` |
 | `--log` | Путь к файлу логов | `logs.log` |
 
 Количество workers ограничено значением `10`.
