@@ -43,22 +43,22 @@ func (hf *HTTPFetcher) Fetch(ctx context.Context, url string) (Response, error) 
 	statusCode := resp.StatusCode
 	status := resp.Status
 
-	if resp.StatusCode >= 300 && resp.StatusCode < 400 {
+	if statusCode >= 300 && statusCode < 400 {
 		resp.Body.Close()
 
 		return Response{
 			StatusCode: statusCode,
 			Status:     status,
-		}, fmt.Errorf("redirection %s", resp.Status)
+		}, fmt.Errorf("redirection %s", status)
 	}
 
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+	if statusCode < 200 || statusCode >= 300 {
 		resp.Body.Close()
 
 		return Response{
 			StatusCode: statusCode,
 			Status:     status,
-		}, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		}, fmt.Errorf("unexpected status code: %d", statusCode)
 	}
 
 	resp.Body, err = CheckHTML(resp)
