@@ -31,7 +31,7 @@ func Parse() (*Config, error) {
 	flag.IntVar(&workers, "workers", 10, "Maximum number of workers")
 	flag.DurationVar(&timeout, "timeout", 10*time.Second, "Timeout for the entire crawling process")
 	flag.DurationVar(&requestTimeout, "request-timeout", 5*time.Second, "Timeout for individual HTTP requests")
-	flag.StringVar(&output, "output", "output.txt", "Output file for the results")
+	flag.StringVar(&output, "output", "output.json", "Output file for the results")
 	flag.StringVar(&log, "log", "logs.log", "Log file for logging")
 	flag.Parse()
 
@@ -51,11 +51,11 @@ func Parse() (*Config, error) {
 }
 
 func (c *Config) validate() error {
-	if c.URLs == "" {
+	if strings.TrimSpace(c.URLs) == "" {
 		return errors.New("urls cannot be empty")
 	}
-	if c.Depth < 1 {
-		return errors.New("depth must be at least 1")
+	if c.Depth < 0 {
+		return errors.New("depth must be at least 0")
 	}
 	if c.Workers < 1 {
 		return errors.New("workers must be at least 1")
@@ -69,10 +69,10 @@ func (c *Config) validate() error {
 	if c.RequestTimeout <= 0 {
 		return errors.New("request timeout must be greater than 0")
 	}
-	if c.Output == "" {
+	if strings.TrimSpace(c.Output) == "" {
 		return errors.New("output file cannot be empty")
 	}
-	if c.Log != "" && strings.TrimSpace(c.Log) == "" {
+	if strings.TrimSpace(c.Log) == "" {
 		return errors.New("log file cannot be empty if specified")
 	}
 	return nil
