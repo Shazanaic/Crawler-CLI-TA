@@ -52,7 +52,7 @@ go mod download
 go build -o crawler-cli-ta ./cmd/crawler
 ```
 
-После сборки будет создан исполняемый файл `crawler-cli-ta`.
+После сборки будет создан исполняемый файл `crawler.exe`.
 
 ## Запуск
 
@@ -72,7 +72,7 @@ go build -o crawler-cli-ta ./cmd/crawler
 На Windows:
 
 ```powershell
-.\crawler-cli.exe `
+.\crawler.exe `
   --urls="https://google.com,https://example.com" `
   --depth=3 `
   --workers=10 `
